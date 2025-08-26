@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xiaomimall.mapper.ProductMapper">
+
+    <!-- 商品基础结果映射 -->
+    <resultMap id="BaseResultMap" type="com.xiaomimall.entity.Product">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="price" property="price"/>
+        <result column="stock" property="stock"/>
+        <result column="sales" property="sales"/>
+        <result column="description" property="description"/>
+        <result column="detail" property="detail"/>
+        <result column="status" property="status"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <!-- 插入新商品 -->
+    <insert id="insert" parameterType="com.xiaomimall.entity.Product" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO products (name, category_id, price, stock, description, detail, status)
+        VALUES (#{name}, #{categoryId}, #{price}, #{stock}, #{description}, #{detail}, #{status})
+    </insert>
+
+    <!-- 条件更新商品信息 -->
+    <update id="update" parameterType="com.xiaomimall.entity.Product">
+        UPDATE products
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="stock != null">stock = #{stock},</if>
+            <if test="sales != null">sales = #{sales},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="detail != null">detail = #{detail},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            updated_at = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 逻辑删除商品 -->
+    <update id="deleteById" parameterType="java.lang.Long">
+        UPDATE products SET is_deleted = 1 WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID查询商品 -->
+    <select id="findById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT * FROM products WHERE id = #{id} AND is_deleted = 0
+    </select>
+
+    <!-- 根据ID列表查询商品列表 -->
+    <select id="findByIds" parameterType="java.util.List" resultMap="BaseResultMap">
+        SELECT * FROM products
+        WHERE id IN
+        <foreach collection="productIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND is_deleted = 0
+    </select>
+
+    <!-- 条件查询商品列表 -->
+    <select id="findByCondition" parameterType="com.xiaomimall.dto.ProductQueryDTO" resultMap="BaseResultMap">
+        SELECT * FROM products
+        <where>
+            is_deleted = 0
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%') OR description LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="categoryId != null">
+                AND category_id = #{categoryId}
+            </if>
+            <if test="minPrice != null">
+                AND price >= #{minPrice}
+            </if>
+            <if test="maxPrice != null">
+                AND price &lt;= #{maxPrice}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        <choose>
+            <when test='sortBy == "price" and sortOrder == "desc"'>ORDER BY price DESC</when>
+            <when test='sortBy == "price" and sortOrder == "asc"'>ORDER BY price ASC</when>
+            <when test='sortBy == "sales" and sortOrder == "desc"'>ORDER BY sales DESC</when>
+            <when test='sortBy == "sales" and sortOrder == "asc"'>ORDER BY sales ASC</when>
+            <otherwise>ORDER BY id DESC</otherwise>
+        </choose>
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <!-- 更新商品库存 -->
+    <update id="reduceStock">
+        UPDATE products SET stock = stock - #{quantity}
+        WHERE id = #{productId} AND stock >= #{quantity}
+    </update>
+
+</mapper>

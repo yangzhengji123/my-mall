@@ -1,0 +1,38 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: mall-backend
+  datasource:
+    url: jdbc:mysql://172.17.160.61:3306/mall_db?useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: newuser
+    password: Yzj456852?
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+   show-sql: true
+  redis:
+    connection:
+      host: localhost
+      port: 6379
+      password: 456852
+      database: 0
+
+  security:
+    oauth2:
+      resource server:
+        jwt:
+          issuer-uri: http://localhost:8080 # JWT签发地址
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml  # MyBatis XML映射路径
+  type-handlers-package: com.xiaomimall.config
+  configuration:
+      default-enum-type-handler: com.xiaomimall.config.PaymentTypeHandler
+      map-underscore-to-camel-case: true      # 自动驼峰转换
+
+jwt:
+  secret: zxcvbnmasdfghjklqwertyuiop123456 # 32位密钥
+  expiration: 86400000  # token有效期24小时(毫秒)
+
+
